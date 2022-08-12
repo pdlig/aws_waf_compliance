@@ -1,4 +1,4 @@
-accountName="diig"
+accountName="playground"
 region="us-east-1"
 import boto3
 import json
@@ -296,9 +296,6 @@ for regionalwebAclArn in list_web_acl_regional["WebACLs"]:
                     name='count_'+item['Name']
                     CommonRuleSetExcluded.append(name)
                 CommonRuleSetExcluded=str(CommonRuleSetExcluded).replace('\'', '').replace('\"', '').replace(',','\n').replace(' ','').strip('[]')
-                
-                
-            
                    
                 
             if 'AWSManagedRulesKnownBadInputsRuleSet' in  ruleGroupName:
@@ -462,6 +459,20 @@ for cloudfrontWebAclArn in list_web_acl_cloudfront["WebACLs"]:
     AWSManagedRulesWordPressRuleSet="NotConfigured"
     AWSManagedRulesBotControlRuleSet="NotConfigured"
     AWSManagedRulesATPRuleSet="NotConfigured"
+    CommonRuleSetExcluded=""
+    IpReputationListExcluded=""
+    AnonymousIpListExcluded=""
+    CommonRuleSetExcluded=""
+    KnownBadInputsExcluded=""
+    SQLiRuleSetExcluded=""
+    AdminProtectionExcluded=""
+    LinuxRuleSetExcluded=""
+    UnixRuleSetExcluded=""
+    WindowsRuleSetExcluded=""
+    PHPRuleSetExcluded=""
+    WordPressRuleSetExcluded=""
+    BotControlRuleSetExcluded=""
+    ATPRuleSetExcluded=""
 
     for webAclrules in webAclGlobal['WebACL']['Rules']:
         if 'OverrideAction' in webAclrules:
@@ -731,8 +742,8 @@ worksheet.write('G1', 'Api_Stage', bold)
 worksheet.write('H1', 'IP_Access_Policy', bold)
 worksheet.write('I1', 'Web_Acl_Name', bold)
 worksheet.write('J1', 'Web_Acl_ID', bold)
-worksheet.write('K1', 'Asset_ID', bold)
-worksheet.write('L1', 'Resource_Owner', bold)
+worksheet.write('K1', 'Created', bold)
+worksheet.write('L1', 'LastUpdated', bold)
 # # ###############################################################
 print("Checking API Gateways")
 Stage="arn:aws:apigateway:region::/restapis/api-id/stages/stage-name"
@@ -771,8 +782,9 @@ for apiGateway in get_rest_apis['items']:
     restApiId=restApiIds
   ) 
  for api_stage in get_api_stages['item']:
-   
     stageName=api_stage['stageName']
+    stageCreated=api_stage['createdDate'].date()
+    lastUpdated=api_stage['lastUpdatedDate'].date()
     webAclArnexists = "webAclArn" in api_stage
 
     if webAclArnexists == True:
@@ -784,12 +796,12 @@ for apiGateway in get_rest_apis['items']:
             webAcl="ArnError"
             WebAclId="ArnError"
             pass       
-        apiResultsList=(alias, id, region,apiGatewayName,restApiType,restApiIds,stageName,checkApipolicyResult,webAcl,webAclId)
+        apiResultsList=(alias, id, region,apiGatewayName,restApiType,restApiIds,stageName,checkApipolicyResult,webAcl,webAclId,stageCreated,lastUpdated)
         apiResults.append(apiResultsList)
         apiResultsWaf.append(apiResultsList)
 
     else:
-        apiResultsList=(alias, id, region,apiGatewayName,restApiType,restApiIds,stageName,checkApipolicyResult,"null","null")
+        apiResultsList=(alias, id, region,apiGatewayName,restApiType,restApiIds,stageName,checkApipolicyResult,"null","null",stageCreated,lastUpdated)
         apiResults.append(apiResultsList)
         apiResultsNoWaf.append(apiResultsList)
 
@@ -816,7 +828,7 @@ worksheet.write('B1', 'Account_ID', bold)
 worksheet.write('C1', 'Cloudfront_ID', bold)
 worksheet.write('D1', 'WAF_Attached', bold)
 worksheet.write('E1', 'Web_Acl_Name', bold)
-worksheet.write('F1', 'Asset_ID', bold)
+worksheet.write('F1', 'LastModified', bold)
 worksheet.write('G1', 'Resource_Owner', bold)
 ####################################################################
 #####CloudFront 
@@ -828,6 +840,7 @@ cloudfrontArns=[]
 try:
  for cloudfront in list_distributions['DistributionList']['Items']:
   cloudfrontId=cloudfront['Origins']['Items'][0]['Id']
+  cloudfrontLastModified=cloudfront['LastModifiedTime'].date()
   cloudfrontArns.append(cloudfront['ARN'])
   webAclId=cloudfront['WebACLId']
   if len(cloudfront['WebACLId'])==0:
@@ -837,13 +850,12 @@ try:
     a,b,WebAclNameCf,d = re.split('/', webAclId) 
     cloudfrontWaf="WebAcl"
 
-  cfResults=(alias, id, cloudfrontId,cloudfrontWaf,WebAclNameCf)
+  cfResults=(alias, id, cloudfrontId,cloudfrontWaf,WebAclNameCf,cloudfrontLastModified)
   cloudFrontResults.append(cfResults)
 except:
     pass
 
     
-
 for row_num, row_data in enumerate((cloudFrontResults),1):
     for col_num, col_data in enumerate(row_data):
      worksheet.write(row_num, col_num, col_data,cell_format)

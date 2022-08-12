@@ -32,7 +32,8 @@ do
 
     done 
 
-#done < /home/dawsonpaul/.aws/new_creds.txt
-done < new_creds_test.txt
+done < /home/dawsonpaul/.aws/new_creds.txt
+#done < /home/dawsonpaul/.aws/new_creds_test.txt
 
 python3 "$mergeFilesPFile"
+
